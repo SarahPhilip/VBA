@@ -60,6 +60,7 @@ Sub StockSolution()
                 stock_close = ws.Cells(r, 6).Value
                 y_change = stock_close - stock_open
                 
+                'If stock opening is zero, we get a zero error. So check if stock_open is zero.
                 If stock_open <> 0 Then
                     p_change = y_change / stock_open
                 End If
