@@ -1,106 +1,119 @@
-Attribute VB_Name = "Module1"
 Sub StockSolution()
 
     'Declaring worksheet variable
     Dim ws As Worksheet
     For Each ws In Worksheets
     
-        Dim Ticker As String
-        Dim TotalVol As Double
-        Dim i As Long
-        Dim TotalRowCount As Long
-        Dim lastRow As Double
-        Dim StockOpening, StockClosing As Double
-        Dim YearlyChange, PercentChange As Double
-        Dim greatestIncTicker As String
-        Dim greatestIncValue As Double
-        Dim greatestDecTicker As String
-        Dim greatestDecValue As Double
-        Dim greatestVolTicker As String
-        Dim greatestVolValue As Double
+        'Declaring all variables
+        Dim ticker As String
+        Dim total_vol As Double
+        Dim r As Long
+        Dim output_row As Long
+        Dim last_row As Double
+        Dim stock_open, stock_close As Double
+        Dim y_change, p_change As Double
+        Dim greatest_inc_ticker As String
+        Dim greatest_inc_value As Double
+        Dim greatest_dec_ticker As String
+        Dim greatest_dec_value As Double
+        Dim greatest_vol_ticker As String
+        Dim greatest_vol_value As Double
         
-        greatestIncValue = 0
-        greatestDecValue = 0
-        greatestVolValue = 0
+        'Initializing dummy variables to 0
+        greatest_inc_value = 0
+        greatest_dec_value = 0
+        greatest_vol_value = 0
+        total_vol = 0
         
-        lastRow = ws.Cells(Rows.Count, 1).End(xlUp).Row
+        'Initalizing the first row of the output columns
+        output_row = 2
         
-        'Labeling headers
+        'Getting the last row
+        last_row = ws.Cells(Rows.Count, 1).End(xlUp).Row
+        
+        'Automatically determines the column width
+        ws.Cells.EntireColumn.AutoFit
+        
+        'Labeling Output Headers
         ws.Range("K1").Value = "Ticker"
         ws.Range("L1").Value = "Yearly Change"
         ws.Range("M1").Value = "Percent Change"
         ws.Range("N1").Value = "Total Stock Volume"
-        
         ws.Cells(1, 17).Value = "Ticker"
         ws.Cells(1, 18).Value = "Value"
-        
         ws.Cells(2, 16).Value = "Greatest % Increase"
         ws.Cells(3, 16).Value = "Greatest % Decrease"
         ws.Cells(4, 16).Value = "Greatest Total Volume"
-        
-        Ticker = ws.Cells(2, 1).Value
-        StockOpening = ws.Cells(2, 3).Value
-        TotalVol = 0
-        TotalRowCount = 2
-        
-        For i = 2 To lastRow
-            TotalVol = TotalVol + ws.Cells(i, 7).Value
+    
+        'Looping through the rows
+        For r = 2 To last_row
+            If (r = 2) Then
+                'Getting the value from excel file
+                ticker = ws.Cells(r, 1).Value
+                stock_open = ws.Cells(r, 3).Value
+            End If
+            'Adding up the volume of the stock
+            total_vol = total_vol + ws.Cells(r, 7).Value
             
-            If ws.Cells(i + 1, 1).Value <> ws.Cells(i, 1) Then
-                StockClosing = ws.Cells(i, 6).Value
-                YearlyChange = StockClosing - StockOpening
+            'Checking if the value in the next row has the same ticker symbol. If not, find closing value and calculate yearly change and percent change
+            If ws.Cells(r + 1, 1).Value <> ws.Cells(r, 1) Then
+                stock_close = ws.Cells(r, 6).Value
+                y_change = stock_close - stock_open
                 
-                If StockOpening <> 0 Then
-                    PercentChange = YearlyChange / StockOpening
+                If stock_open <> 0 Then
+                    p_change = y_change / stock_open
                 End If
                 
-                ws.Cells(TotalRowCount, 11).Value = Ticker
-                
-                If YearlyChange > 0 Then
-                    ws.Cells(TotalRowCount, 12).Interior.ColorIndex = 4
-                ElseIf YearlyChange < 0 Then
-                    ws.Cells(TotalRowCount, 12).Interior.ColorIndex = 3
+                'Writing the values in output column
+                ws.Cells(output_row, 11).Value = ticker
+                ws.Cells(output_row, 12).Value = y_change
+                ws.Cells(output_row, 14).Value = total_vol
+                 If stock_open <> 0 Then
+                    ws.Cells(output_row, 13).Value = p_change
+                    ws.Cells(output_row, 13).NumberFormat = "0.00%"
                 Else
-                    ws.Cells(TotalRowCount, 12).Interior.ColorIndex = 0
+                    ws.Cells(output_row, 13).Value = "N/A"
                 End If
                 
-                ws.Cells(TotalRowCount, 12).Value = YearlyChange
-                ws.Cells(TotalRowCount, 14).Value = TotalVol
-                
-                If TotalVol > greatestVolValue Then
-                    greatestVolValue = TotalVol
-                    greatestVolTicker = Ticker
-                End If
-                
-                If StockOpening <> 0 Then
-                    ws.Cells(TotalRowCount, 13).Value = PercentChange
+                'Formatting for the positive change in green and negative change in red.
+                If y_change > 0 Then
+                    ws.Cells(output_row, 12).Interior.ColorIndex = 4
+                ElseIf y_change < 0 Then
+                    ws.Cells(output_row, 12).Interior.ColorIndex = 3
                 Else
-                    ws.Cells(TotalRowCount, 13).Value = "N/A"
+                    ws.Cells(output_row, 12).Interior.ColorIndex = 0
+                End If
+                           
+                'Finding Greatest % increase, Greatest % Decrease and Greatest total volume
+                If total_vol > greatest_vol_value Then
+                    greatest_vol_value = total_vol
+                    greatest_vol_ticker = ticker
+                End If
+
+                If p_change > greatest_inc_value Then
+                    greatest_inc_value = p_change
+                    greatest_inc_ticker = ticker
+                ElseIf p_change < greatest_dec_value Then
+                    greatest_dec_value = p_change
+                    greatest_dec_ticker = ticker
                 End If
                 
-                If PercentChange > greatestIncValue Then
-                    greatestIncValue = PercentChange
-                    greatestIncTicker = Ticker
-                ElseIf PercentChange < greatestDecValue Then
-                    greatestDecValue = PercentChange
-                    greatestDecTicker = Ticker
-                End If
-                
-                ws.Cells(TotalRowCount, 13).NumberFormat = "0.00%"
-                Ticker = ws.Cells(i + 1, 1).Value
-                StockOpening = ws.Cells(i + 1, 3).Value
-                TotalVol = 0
-                TotalRowCount = TotalRowCount + 1
+                'Initializing with new values
+                ticker = ws.Cells(r + 1, 1).Value
+                stock_open = ws.Cells(r + 1, 3).Value
+                total_vol = 0
+                output_row = output_row + 1
         
             End If
-        Next i
-        ws.Cells(2, 17).Value = greatestIncTicker
-        ws.Cells(2, 18).Value = greatestIncValue
+        Next r
+        'Writing the outsput values to the table
+        ws.Cells(2, 17).Value = greatest_inc_ticker
+        ws.Cells(2, 18).Value = greatest_inc_value
         ws.Cells(2, 18).NumberFormat = "0.00%"
-        ws.Cells(3, 17).Value = greatestDecTicker
-        ws.Cells(3, 18).Value = greatestDecValue
+        ws.Cells(3, 17).Value = greatest_dec_ticker
+        ws.Cells(3, 18).Value = greatest_dec_value
         ws.Cells(3, 18).NumberFormat = "0.00%"
-        ws.Cells(4, 17).Value = greatestVolTicker
-        ws.Cells(4, 18).Value = greatestVolValue
+        ws.Cells(4, 17).Value = greatest_vol_ticker
+        ws.Cells(4, 18).Value = greatest_vol_value
     Next ws
 End Sub
